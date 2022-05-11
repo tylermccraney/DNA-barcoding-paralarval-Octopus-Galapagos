@@ -289,7 +289,7 @@ mafft \
 Next we inspect the MSA in Geneious. The image below was created in
 Geneious by saving an alignment view as PNG.
 
-![](/Users/macrodontogobius/COI_octo_mas1/quality-trimmed/AA_msa.png)
+![](assets/AA_msa.png)
 
 We see most of the protein sequences are aligned nicely without many AA
 substitutions. However, there are several short or weird looking
@@ -308,7 +308,7 @@ trimal \
 
 Now let’s inspect the pruned alignment in Geneious.
 
-![](/Users/macrodontogobius/COI_octo_mas1/quality-trimmed/AA_msa_pruned.png)
+![](assets/AA_msa_pruned.png)
 
 Wow! This MSA is looking so much better after pruning those spurious
 sequences. Note the Consensus sequence on top and the Identity graphic
@@ -536,7 +536,7 @@ mafft \
 > ~/COI_octo_mas1/baseline/seqdump_msa.fasta
 ```
 
-![](/Users/macrodontogobius/COI_octo_mas1/baseline/seqdump_msa.png)
+![](assets/seqdump_msa.png)
 
 We can see there is one spurious sequence… indexing at 1, sequence \#100
 is spurious and needs to be pruned. We’re not going to use trimAl to
@@ -689,7 +689,7 @@ trimal \
 
 Now let’s inspect the back-translated DNA MSA.
 
-![](/Users/macrodontogobius/COI_octo_mas1/tree/DNA_msa.png)
+![](assets/DNA_msa.png)
 
 Hmm. It appears there are two spurious sequences: 51A and 97B. These
 sneaked through our pipeline because the MSA algorithm uses
@@ -713,7 +713,7 @@ trimal \
 -selectseqs \{ 208,237 \}
 ```
 
-![](/Users/macrodontogobius/COI_octo_mas1/tree/DNA_msa_pruned.png)
+![](assets/DNA_msa_pruned.png)
 
 See how the edges of the MSA are kinda rough? It’s very important that
 we edge-trim the MSA, so the experimental sequences don’t differ at all
@@ -732,7 +732,7 @@ trimal \
 
 Let’s view the edge-trimmed, back-translated DNA MSA:
 
-![](/Users/macrodontogobius/COI_octo_mas1/tree/DNA_msa_pruned_trimmed.png)
+![](assets/DNA_msa_pruned_trimmed.png)
 
 This alignment looks beautiful. Let’s proceed to the final part of our
 analysis, phylogenetic tree inference.
@@ -1115,7 +1115,7 @@ the unknown experimental samples are identical to a baseline taxon.
 Specifically, there are 11 exact matches to *Octopus hubbsorum* and 50
 exact matches to *Octopus mimus*. Let’s view the reduced alignment.
 
-![](/Users/macrodontogobius/COI_octo_mas1/tree/DNA_msa_pruned_trimmed.fasta.reduced.png)
+![](assets/DNA_msa_pruned_trimmed.fasta.reduced.png)
 
 There are 15 unique sequences out of the 114 “good” experimental
 sequences. Notice there are a few small gaps now (e.g., sequence 169).
