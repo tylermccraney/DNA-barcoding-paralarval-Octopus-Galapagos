@@ -1670,7 +1670,7 @@ o \
 
 Now lets use `ggtree` to plot and annotate tree figures
 
-Bootstrapping
+Bootstrapping analysis
 
 ``` bash
 raxmlHPC-PTHREADS-AVX2 \
