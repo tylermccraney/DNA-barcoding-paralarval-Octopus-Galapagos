@@ -1,7 +1,7 @@
 DNA Barcoding Paralarval Octopus of the Galápagos Islands
 ================
 Tyler McCraney
-2022-05-10
+2022-05-14
 
 ### Overview
 
@@ -1122,8 +1122,8 @@ sequences. Notice there are a few small gaps now (e.g., sequence 169).
 RAxML treats the “N” ambiguous nucleotide character like it’s missing
 data, so the “N”’s are replaced with “-”’s in the reduced alignment.
 
-Now let’s infer an ML tree on the reduced MSA, and plot the results
-using the `ape` package in `R`:
+Now let’s infer a preliminary ML tree on the reduced MSA, and plot the
+results using the `ape` package in `R`:
 
 ``` bash
 raxmlHPC-PTHREADS-AVX2 \
@@ -1168,8 +1168,7 @@ plot.phylo(x = reduced, cex = 0.6, no.margin = TRUE)
 
 We can see the ambiguously-identified taxa are not relevant to
 identifying the unknown *Octopus* samples. Lets prune those ambiguous
-taxa with trimAl, and infer the final tree and branch support with
-RAxML.
+taxa with trimAl.
 
 ``` bash
 trimal \
@@ -1178,14 +1177,21 @@ trimal \
 -selectseqs \{ 133-155 \}
 ```
 
+Okay we’re ready to infer the final tree and bootstrap support with
+RAxML.
+
 ``` bash
 raxmlHPC-PTHREADS-AVX2 \
+-f a \
 -m GTRGAMMA \
 -n final \
+-N autoMRE \
+-o Vampyroteuthis_infernalis \
 -p $RANDOM \
 -q ~/COI_octo_mas1/tree/partitions.txt \
 -s ~/COI_octo_mas1/tree/DNA_msa_final.fasta \
--T 4
+-T 4 \
+-x $RANDOM
 ```
 
 Lets take a look at the model fit from RAxML. We can see below that
@@ -1286,109 +1292,6 @@ cat /Users/macrodontogobius/COI_octo_mas1/tree/RAxML_info.final
 
     Overall execution time: 26.657866 secs or 0.007405 hours or 0.000309 days
 
-Now let’s optimize the final tree and compute parametric branch support
-stats.
-
-``` bash
-raxmlHPC-PTHREADS-AVX2 \
--f J \
--m GTRGAMMA \
--n final.shl \
--p $RANDOM \
--q ~/COI_octo_mas1/tree/partitions.txt \
--s ~/COI_octo_mas1/tree/DNA_msa_final.fasta \
--T 4 \
--t ~/COI_octo_mas1/tree/RAxML_bestTree.final
-```
-
-Lets take a look at the additional steps. We can see below that the
-likelihood of the tree was improved with 4 NNI moves.
-
-``` bash
-cat /Users/macrodontogobius/COI_octo_mas1/tree/RAxML_info.final.shl
-```
-
-
-
-    WARNING: RAxML is not checking sequences for duplicate seqs and sites with missing data!
-
-
-
-    This is RAxML version 8.2.12 released by Alexandros Stamatakis on May 2018.
-
-    With greatly appreciated code contributions by:
-    Andre Aberer      (HITS)
-    Simon Berger      (HITS)
-    Alexey Kozlov     (HITS)
-    Kassian Kobert    (HITS)
-    David Dao         (KIT and HITS)
-    Sarah Lutteropp   (KIT and HITS)
-    Nick Pattengale   (Sandia)
-    Wayne Pfeiffer    (SDSC)
-    Akifumi S. Tanabe (NRIFS)
-    Charlie Taylor    (UF)
-
-
-    Alignment has 325 distinct alignment patterns
-
-    Proportion of gaps and completely undetermined characters in this alignment: 0.38%
-
-    RAxML computation of SH-like support values on a given tree
-
-    Using 3 distinct models/data partitions with joint branch length optimization
-
-
-    All free model parameters will be estimated by RAxML
-    GAMMA model of rate heterogeneity, ML estimate of alpha-parameter
-
-    GAMMA Model parameters will be estimated up to an accuracy of 0.1000000000 Log Likelihood units
-
-    Partition: 0
-    Alignment Patterns: 83
-    Name: codon1
-    DataType: DNA
-    Substitution Matrix: GTR
-
-
-
-    Partition: 1
-    Alignment Patterns: 58
-    Name: codon2
-    DataType: DNA
-    Substitution Matrix: GTR
-
-
-
-    Partition: 2
-    Alignment Patterns: 184
-    Name: codon3
-    DataType: DNA
-    Substitution Matrix: GTR
-
-
-
-
-    RAxML was called as follows:
-
-    raxmlHPC-PTHREADS-AVX2 -f J -m GTRGAMMA -n final.shl -p 16974 -q partitions.txt -s DNA_msa_final.fasta -T 4 -t RAxML_bestTree.final 
-
-
-    Time after model optimization: 0.711848
-    Initial Likelihood -16162.789380
-
-    NNI interchanges 4 Likelihood -16161.458223
-    NNI interchanges 0 Likelihood -16161.440828
-
-    Final Likelihood of NNI-optimized tree: -16161.440828
-
-    RAxML NNI-optimized tree written to file: /Users/macrodontogobius/COI_octo_mas1/tree/RAxML_fastTree.final.shl
-
-    Same tree with SH-like supports written to file: /Users/macrodontogobius/COI_octo_mas1/tree/RAxML_fastTreeSH_Support.final.shl
-
-    Same tree with SH-like support for each partition written to file: /Users/macrodontogobius/COI_octo_mas1/tree/RAxML_fastTree_perPartition_SH_Support.final.shl
-
-    Total execution time: 1.126163
-
 Let’s view the result in 2 trees: (1) a phylogram and (2) a cladogram
 (with branch support).
 
@@ -1398,9 +1301,20 @@ library(ape)
 
 setwd(dir = "~/COI_octo_mas1/tree/")
 
-raxml2nwk(
-  infile = "RAxML_fastTreeSH_Support.final.shl", 
-  outfile = "RAxML_fastTreeSH_Support.final.shl.tre")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 final.shl <- 
   read.tree(
@@ -1467,7 +1381,7 @@ mtext(
   line = -2)
 ```
 
-![](DNA-barcoding-paralarval-Octopus-Galapagos_files/figure-gfm/unnamed-chunk-26-1.png)<!-- -->
+![](DNA-barcoding-paralarval-Octopus-Galapagos_files/figure-gfm/unnamed-chunk-24-1.png)<!-- -->
 
 ``` r
 # Zoom-in on clades
@@ -1479,7 +1393,7 @@ zoom(
   edge.width = 2)
 ```
 
-![](DNA-barcoding-paralarval-Octopus-Galapagos_files/figure-gfm/unnamed-chunk-27-1.png)<!-- -->
+![](DNA-barcoding-paralarval-Octopus-Galapagos_files/figure-gfm/unnamed-chunk-25-1.png)<!-- -->
 
 So we see we have 2 clades of experimental sequences (cyan and purple)
 that do not group with any known baseline sequence. We call these OTU’s.
@@ -1487,8 +1401,8 @@ These OTU’s could be completely unknown (new) species, or known
 (described) species for which there’s no sequence available in GenBank.
 Anyways, we expect to find this sort of result when we’re barcoding
 tropical marine invertebrates. Finally, we summarize the results in a
-table, remebering to add the exactly identical sequences pruned in the
-RAxML alignment check (i used `Grep` to extract these to CSV:
+table, remembering to add the exactly identical sequences pruned in the
+RAxML alignment check (I used `Grep` to extract these to CSV:
 `exactly_identical.csv`).
 
 ``` r
@@ -1516,7 +1430,7 @@ dat <-
     c("138B",NA,"Octopus_mimus"),
     c("154B",NA,"Octopus_mimus"),
     c("55A",NA,"Octopus_mimus"),
-    c("24A",NA,"Octopus_hubbsorum|Octopus_oculifer"),
+    c("24A",NA,"Octopus_oculifer"),
     c("102B",NA,"Octopus_hubbsorum|Octopus_oculifer"),
     c("148B",NA,"OTU1"),
     c("22A",NA,"OTU1"),
@@ -1550,93 +1464,93 @@ dat
     13     66A                  Octopus_hubbsorum
     14     69A                  Octopus_hubbsorum
     15    102B Octopus_hubbsorum|Octopus_oculifer
-    16     24A Octopus_hubbsorum|Octopus_oculifer
-    17    101B                      Octopus_mimus
-    18    103B                      Octopus_mimus
-    19    104B                      Octopus_mimus
-    20     10A                      Octopus_mimus
-    21    110B                      Octopus_mimus
-    22    112B                      Octopus_mimus
-    23    114B                      Octopus_mimus
-    24    115B                      Octopus_mimus
-    25    116B                      Octopus_mimus
-    26    117B                      Octopus_mimus
-    27    118B                      Octopus_mimus
-    28    119B                      Octopus_mimus
-    29    120B                      Octopus_mimus
-    30    122B                      Octopus_mimus
-    31    123B                      Octopus_mimus
-    32    124B                      Octopus_mimus
-    33    126B                      Octopus_mimus
-    34    127B                      Octopus_mimus
-    35    129B                      Octopus_mimus
-    36     12A                      Octopus_mimus
-    37    132B                      Octopus_mimus
-    38    136B                      Octopus_mimus
-    39    138B                      Octopus_mimus
-    40     13A                      Octopus_mimus
-    41    140B                      Octopus_mimus
-    42    144B                      Octopus_mimus
-    43    145B                      Octopus_mimus
-    44    147B                      Octopus_mimus
-    45     14A                      Octopus_mimus
-    46    152B                      Octopus_mimus
-    47    154B                      Octopus_mimus
-    48    155B                      Octopus_mimus
-    49    157B                      Octopus_mimus
-    50     17A                      Octopus_mimus
-    51     19A                      Octopus_mimus
-    52      1A                      Octopus_mimus
-    53     20A                      Octopus_mimus
-    54     23A                      Octopus_mimus
-    55     28A                      Octopus_mimus
-    56     29A                      Octopus_mimus
-    57     30A                      Octopus_mimus
-    58     31A                      Octopus_mimus
-    59     33A                      Octopus_mimus
-    60     34A                      Octopus_mimus
-    61     35A                      Octopus_mimus
-    62     36A                      Octopus_mimus
-    63     37A                      Octopus_mimus
-    64     39A                      Octopus_mimus
-    65      3A                      Octopus_mimus
-    66     40A                      Octopus_mimus
-    67     41A                      Octopus_mimus
-    68     42A                      Octopus_mimus
-    69     44A                      Octopus_mimus
-    70     46A                      Octopus_mimus
-    71     47A                      Octopus_mimus
-    72     48A                      Octopus_mimus
-    73     49A                      Octopus_mimus
-    74      4A                      Octopus_mimus
-    75     55A                      Octopus_mimus
-    76     56A                      Octopus_mimus
-    77     59A                      Octopus_mimus
-    78      5A                      Octopus_mimus
-    79     60A                      Octopus_mimus
-    80     61A                      Octopus_mimus
-    81     63A                      Octopus_mimus
-    82     64A                      Octopus_mimus
-    83     67A                      Octopus_mimus
-    84     68A                      Octopus_mimus
-    85      6A                      Octopus_mimus
-    86     72A                      Octopus_mimus
-    87     75A                      Octopus_mimus
-    88     76A                      Octopus_mimus
-    89      7A                      Octopus_mimus
-    90     80A                      Octopus_mimus
-    91     81A                      Octopus_mimus
-    92     85A                      Octopus_mimus
-    93      8A                      Octopus_mimus
-    94     90A                      Octopus_mimus
-    95     91A                      Octopus_mimus
-    96     92A                      Octopus_mimus
-    97     93A                      Octopus_mimus
-    98     95A                      Octopus_mimus
-    99     96A                      Octopus_mimus
-    100    98B                      Octopus_mimus
-    101    99B                      Octopus_mimus
-    102     9A                      Octopus_mimus
+    16    101B                      Octopus_mimus
+    17    103B                      Octopus_mimus
+    18    104B                      Octopus_mimus
+    19     10A                      Octopus_mimus
+    20    110B                      Octopus_mimus
+    21    112B                      Octopus_mimus
+    22    114B                      Octopus_mimus
+    23    115B                      Octopus_mimus
+    24    116B                      Octopus_mimus
+    25    117B                      Octopus_mimus
+    26    118B                      Octopus_mimus
+    27    119B                      Octopus_mimus
+    28    120B                      Octopus_mimus
+    29    122B                      Octopus_mimus
+    30    123B                      Octopus_mimus
+    31    124B                      Octopus_mimus
+    32    126B                      Octopus_mimus
+    33    127B                      Octopus_mimus
+    34    129B                      Octopus_mimus
+    35     12A                      Octopus_mimus
+    36    132B                      Octopus_mimus
+    37    136B                      Octopus_mimus
+    38    138B                      Octopus_mimus
+    39     13A                      Octopus_mimus
+    40    140B                      Octopus_mimus
+    41    144B                      Octopus_mimus
+    42    145B                      Octopus_mimus
+    43    147B                      Octopus_mimus
+    44     14A                      Octopus_mimus
+    45    152B                      Octopus_mimus
+    46    154B                      Octopus_mimus
+    47    155B                      Octopus_mimus
+    48    157B                      Octopus_mimus
+    49     17A                      Octopus_mimus
+    50     19A                      Octopus_mimus
+    51      1A                      Octopus_mimus
+    52     20A                      Octopus_mimus
+    53     23A                      Octopus_mimus
+    54     28A                      Octopus_mimus
+    55     29A                      Octopus_mimus
+    56     30A                      Octopus_mimus
+    57     31A                      Octopus_mimus
+    58     33A                      Octopus_mimus
+    59     34A                      Octopus_mimus
+    60     35A                      Octopus_mimus
+    61     36A                      Octopus_mimus
+    62     37A                      Octopus_mimus
+    63     39A                      Octopus_mimus
+    64      3A                      Octopus_mimus
+    65     40A                      Octopus_mimus
+    66     41A                      Octopus_mimus
+    67     42A                      Octopus_mimus
+    68     44A                      Octopus_mimus
+    69     46A                      Octopus_mimus
+    70     47A                      Octopus_mimus
+    71     48A                      Octopus_mimus
+    72     49A                      Octopus_mimus
+    73      4A                      Octopus_mimus
+    74     55A                      Octopus_mimus
+    75     56A                      Octopus_mimus
+    76     59A                      Octopus_mimus
+    77      5A                      Octopus_mimus
+    78     60A                      Octopus_mimus
+    79     61A                      Octopus_mimus
+    80     63A                      Octopus_mimus
+    81     64A                      Octopus_mimus
+    82     67A                      Octopus_mimus
+    83     68A                      Octopus_mimus
+    84      6A                      Octopus_mimus
+    85     72A                      Octopus_mimus
+    86     75A                      Octopus_mimus
+    87     76A                      Octopus_mimus
+    88      7A                      Octopus_mimus
+    89     80A                      Octopus_mimus
+    90     81A                      Octopus_mimus
+    91     85A                      Octopus_mimus
+    92      8A                      Octopus_mimus
+    93     90A                      Octopus_mimus
+    94     91A                      Octopus_mimus
+    95     92A                      Octopus_mimus
+    96     93A                      Octopus_mimus
+    97     95A                      Octopus_mimus
+    98     96A                      Octopus_mimus
+    99     98B                      Octopus_mimus
+    100    99B                      Octopus_mimus
+    101     9A                      Octopus_mimus
+    102    24A                   Octopus_oculifer
     103   105B                               OTU1
     104   130B                               OTU1
     105   148B                               OTU1
@@ -1654,34 +1568,4 @@ dat
 
 #### Prepare tree figures for presentation slides
 
-To help with the visual interpretation of tree, lets collapse the
-branches scored with low/no statistical support. The statistical support
-metric we’re using is called SH-like support, and it’s a measure of the
-probability that the branch “exists” (if branach doesn’t “exist” then
-its presence is just an artifact of ML inference). We’ll set the
-threshold at 5, which can be interpreted as a P-value of 0.95.
-
-``` bash
-nw_ed ~/COI_octo_mas1/tree/RAxML_fastTreeSH_Support.final.shl.nwk \
-'i & b<=5' \
-o \
-> ~/COI_octo_mas1/tree/collapsed.final.shl.nwk
-```
-
 Now lets use `ggtree` to plot and annotate tree figures
-
-Bootstrapping analysis
-
-``` bash
-raxmlHPC-PTHREADS-AVX2 \
--f a \
--m GTRGAMMA \
--n bootstrap \
--N autoMRE \
--o Vampyroteuthis_infernalis \
--p $RANDOM \
--q ~/COI_octo_mas1/tree/partitions.txt \
--s ~/COI_octo_mas1/tree/DNA_msa_final.fasta \
--T 4 \
--x $RANDOM
-```
