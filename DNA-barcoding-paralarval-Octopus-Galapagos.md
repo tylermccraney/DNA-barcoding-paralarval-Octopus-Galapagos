@@ -1,7 +1,7 @@
 DNA Barcoding Paralarval Octopus of the Galápagos Islands
 ================
 Tyler McCraney
-2022-05-14
+2022-05-16
 
 ### Overview
 
@@ -1182,16 +1182,12 @@ RAxML.
 
 ``` bash
 raxmlHPC-PTHREADS-AVX2 \
--f a \
 -m GTRGAMMA \
 -n final \
--N autoMRE \
--o Vampyroteuthis_infernalis \
 -p $RANDOM \
 -q ~/COI_octo_mas1/tree/partitions.txt \
 -s ~/COI_octo_mas1/tree/DNA_msa_final.fasta \
--T 4 \
--x $RANDOM
+-T 4
 ```
 
 Lets take a look at the model fit from RAxML. We can see below that
@@ -1292,6 +1288,109 @@ cat /Users/macrodontogobius/COI_octo_mas1/tree/RAxML_info.final
 
     Overall execution time: 26.657866 secs or 0.007405 hours or 0.000309 days
 
+Now let’s optimize the final tree and compute parametric branch support
+stats.
+
+``` bash
+raxmlHPC-PTHREADS-AVX2 \
+-f J \
+-m GTRGAMMA \
+-n final.shl \
+-p $RANDOM \
+-q ~/COI_octo_mas1/tree/partitions.txt \
+-s ~/COI_octo_mas1/tree/DNA_msa_final.fasta \
+-T 4 \
+-t ~/COI_octo_mas1/tree/RAxML_bestTree.final
+```
+
+Lets take a look at the additional steps. We can see below that the
+likelihood of the tree was improved with 4 NNI moves.
+
+``` bash
+cat /Users/macrodontogobius/COI_octo_mas1/tree/RAxML_info.final.shl
+```
+
+
+
+    WARNING: RAxML is not checking sequences for duplicate seqs and sites with missing data!
+
+
+
+    This is RAxML version 8.2.12 released by Alexandros Stamatakis on May 2018.
+
+    With greatly appreciated code contributions by:
+    Andre Aberer      (HITS)
+    Simon Berger      (HITS)
+    Alexey Kozlov     (HITS)
+    Kassian Kobert    (HITS)
+    David Dao         (KIT and HITS)
+    Sarah Lutteropp   (KIT and HITS)
+    Nick Pattengale   (Sandia)
+    Wayne Pfeiffer    (SDSC)
+    Akifumi S. Tanabe (NRIFS)
+    Charlie Taylor    (UF)
+
+
+    Alignment has 325 distinct alignment patterns
+
+    Proportion of gaps and completely undetermined characters in this alignment: 0.38%
+
+    RAxML computation of SH-like support values on a given tree
+
+    Using 3 distinct models/data partitions with joint branch length optimization
+
+
+    All free model parameters will be estimated by RAxML
+    GAMMA model of rate heterogeneity, ML estimate of alpha-parameter
+
+    GAMMA Model parameters will be estimated up to an accuracy of 0.1000000000 Log Likelihood units
+
+    Partition: 0
+    Alignment Patterns: 83
+    Name: codon1
+    DataType: DNA
+    Substitution Matrix: GTR
+
+
+
+    Partition: 1
+    Alignment Patterns: 58
+    Name: codon2
+    DataType: DNA
+    Substitution Matrix: GTR
+
+
+
+    Partition: 2
+    Alignment Patterns: 184
+    Name: codon3
+    DataType: DNA
+    Substitution Matrix: GTR
+
+
+
+
+    RAxML was called as follows:
+
+    raxmlHPC-PTHREADS-AVX2 -f J -m GTRGAMMA -n final.shl -p 16974 -q partitions.txt -s DNA_msa_final.fasta -T 4 -t RAxML_bestTree.final 
+
+
+    Time after model optimization: 0.711848
+    Initial Likelihood -16162.789380
+
+    NNI interchanges 4 Likelihood -16161.458223
+    NNI interchanges 0 Likelihood -16161.440828
+
+    Final Likelihood of NNI-optimized tree: -16161.440828
+
+    RAxML NNI-optimized tree written to file: /Users/macrodontogobius/COI_octo_mas1/tree/RAxML_fastTree.final.shl
+
+    Same tree with SH-like supports written to file: /Users/macrodontogobius/COI_octo_mas1/tree/RAxML_fastTreeSH_Support.final.shl
+
+    Same tree with SH-like support for each partition written to file: /Users/macrodontogobius/COI_octo_mas1/tree/RAxML_fastTree_perPartition_SH_Support.final.shl
+
+    Total execution time: 1.126163
+
 Let’s view the result in 2 trees: (1) a phylogram and (2) a cladogram
 (with branch support).
 
@@ -1300,21 +1399,6 @@ library(treeio)
 library(ape)
 
 setwd(dir = "~/COI_octo_mas1/tree/")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 final.shl <- 
   read.tree(
@@ -1381,7 +1465,7 @@ mtext(
   line = -2)
 ```
 
-![](DNA-barcoding-paralarval-Octopus-Galapagos_files/figure-gfm/unnamed-chunk-24-1.png)<!-- -->
+![](DNA-barcoding-paralarval-Octopus-Galapagos_files/figure-gfm/unnamed-chunk-26-1.png)<!-- -->
 
 ``` r
 # Zoom-in on clades
@@ -1393,7 +1477,7 @@ zoom(
   edge.width = 2)
 ```
 
-![](DNA-barcoding-paralarval-Octopus-Galapagos_files/figure-gfm/unnamed-chunk-25-1.png)<!-- -->
+![](DNA-barcoding-paralarval-Octopus-Galapagos_files/figure-gfm/unnamed-chunk-27-1.png)<!-- -->
 
 So we see we have 2 clades of experimental sequences (cyan and purple)
 that do not group with any known baseline sequence. We call these OTU’s.
@@ -1568,4 +1652,189 @@ dat
 
 #### Prepare tree figures for presentation slides
 
-Now lets use `ggtree` to plot and annotate tree figures
+Now lets use `ggtree` to plot and annotate tree figures.
+
+``` r
+library(tidyverse)
+library(ggforce)
+library(treeio)
+library(ggtree)
+library(scales)
+
+setwd(dir = "~/COI_octo_mas1/tree/")
+
+# manually added exactly identical seqs back into RAxML_fastTreeSH_Support.final.shl.nwk
+
+tre <- read.newick(file = "RAxML_fastTreeSH_Support.final.edit.shl.nwk", node.label = "support")
+
+tre@phylo$tip.label <- gsub(pattern = "_", replacement = " ", x = tre@phylo$tip.label)
+
+# ggtrees
+ggt <- ggtree(tr = tre, branch.length = "none")
+
+ggt + geom_nodelab(mapping = aes(label = node)) + geom_tiplab(fontface = "italic") + xlim_tree(xlim = 40)
+```
+
+![](DNA-barcoding-paralarval-Octopus-Galapagos_files/figure-gfm/unnamed-chunk-29-1.png)<!-- -->
+
+``` r
+ggsave(filename = "nodelabels.pdf", width = 10, height = 45)
+
+rm(ggt)
+```
+
+``` r
+setwd(dir = "~/COI_octo_mas1/tree/")
+
+# plot full tree figure w/o tip labels; annotated with barcoding clades
+# O. mimus node 389
+# O. oculifer/hubbsorum node 385
+# OTU1 node 361
+# OTU2 node 333
+
+clades <- 
+  tibble(
+    node = c(389,385,361,333), 
+    Clade = c("Octopus mimus","Octopus oculifer + hubbsorum","Operational Taxonomic Unit 1","Operational Taxonomic Unit 2"))
+
+ggt <- ggtree(tr = tre)
+
+ggt + 
+  geom_hilight(data = clades, mapping = aes(node = node, fill = Clade), extend = 1, to.bottom = T) +
+  geom_treescale(x = 0.5, y = 200, width = 1, offset = 2, offset.label = -2, label = "substitution") +
+  theme(legend.text = element_text(face = "italic"))
+```
+
+![](DNA-barcoding-paralarval-Octopus-Galapagos_files/figure-gfm/unnamed-chunk-30-1.png)<!-- -->
+
+``` r
+ggsave(filename = "figs/fig1.pdf", width = 5.52, height = 2.286667, units = "in")
+ggsave(filename = "figs/fig1.png", width = 5.52, height = 2.286667, units = "in", dpi = 320)
+
+cols <- alpha(colour = hue_pal()(4), alpha = 0.5)
+barplot(1:4, col = cols)
+```
+
+![](DNA-barcoding-paralarval-Octopus-Galapagos_files/figure-gfm/unnamed-chunk-30-2.png)<!-- -->
+
+``` r
+# plot O. mimus clade
+mimus <- tree_subset(tree = tre, node = clades$node[1], levels_back = 0, root_edge = T) %>% ggtree(branch.length = "none")
+# n=50 samples above O. mimus
+# n=39 samples below O. mimus
+
+mimus + geom_nodelab(mapping = aes(label = node))
+```
+
+![](DNA-barcoding-paralarval-Octopus-Galapagos_files/figure-gfm/unnamed-chunk-30-3.png)<!-- -->
+
+``` r
+mimus$data <- mutate(.data = mimus$data, ID = "ID: Octopus mimus")
+
+mimus + 
+  geom_tiplab(data = filter(mimus$data, label == "Octopus mimus"), fontface = "italic", offset = 0.2) + 
+  geom_nodelab(data = filter(mimus$data, support > 0), mapping = aes(label = support), hjust = 0) +
+  geom_highlight(node = 91, fill = cols[1], to.bottom = T, extend = Inf) +
+  geom_segment(aes(x = -Inf, y = 14.5, xend = 0, yend = 14.5)) +
+  geom_strip(taxa1 = "152B", taxa2 = "1A", label = "50 paralarvae", offset = 0.05, offset.text = 0.1, geom = "text") +
+  geom_strip(taxa1 = "49A", taxa2 = "55A", label = "34 paralarvae\n5 adults", offset = 0.05, offset.text = 0.1, geom = "text") +
+  geom_tiplab(data = filter(.data = mimus$data, label %in% c("59A","93A","41A")), mapping = aes(label = ID), fontface = "italic", geom = "label", offset = 2.4) +
+  xlim(c(0,10))
+```
+
+![](DNA-barcoding-paralarval-Octopus-Galapagos_files/figure-gfm/unnamed-chunk-30-4.png)<!-- -->
+
+``` r
+ggsave(filename = "figs/fig2v1.pdf", width = 5.52, height = 2.286667, units = "in")
+ggsave(filename = "figs/fig2v1.png", width = 5.52, height = 2.286667, units = "in", dpi = 320)
+
+
+# plot O. oculifer + hubbsorum clade
+oculiferhubbsorum <- tree_subset(tree = tre, node = clades$node[2], levels_back = 0, root_edge = T) %>% ggtree(branch.length = "none")
+
+oculiferhubbsorum + geom_nodelab(mapping = aes(label = node))
+```
+
+![](DNA-barcoding-paralarval-Octopus-Galapagos_files/figure-gfm/unnamed-chunk-30-5.png)<!-- -->
+
+``` r
+oculiferhubbsorum <- rotate(tree_view = oculiferhubbsorum, node = 19)
+
+oculiferhubbsorum$data <- mutate(.data = oculiferhubbsorum$data, ID1 = "ID: Octopus hubbsorum", ID2 = "ID: Octopus oculifer", ID3 = "ID: uncertain")
+
+oculiferhubbsorum + 
+  geom_tiplab(data = filter(oculiferhubbsorum$data, label %in% c("Octopus oculifer","Octopus hubbsorum")), fontface = "italic", offset = 0.1) + 
+  geom_nodelab(data = filter(oculiferhubbsorum$data, support > 0), mapping = aes(label = support), hjust = 0) +
+  geom_highlight(node = 16, fill = cols[2], to.bottom = T, extend = Inf) +
+  geom_segment(aes(x = -Inf, y = 3.5, xend = 0, yend = 3.5)) +
+  geom_strip(taxa1 = "128B", taxa2 = "2A", label = "11 paralarvae", offset = 0.05, offset.text = 0.1, geom = "text", fill = "white") +
+  geom_strip(taxa1 = "24A", taxa2 = "24A", label = "1 paralarvae", extend = 0.25, offset = 0.05, offset.text = 0.1, geom = "text", fill = "white") +
+  geom_strip(taxa1 = "102B", taxa2 = "102B", label = "1 paralarvae", extend = 0.25, offset = 0.05, offset.text = 0.1, geom = "text", fill = "white") +
+  geom_tiplab(data = filter(.data = oculiferhubbsorum$data, label == "66A"), mapping = aes(label = ID1), fontface = "italic", geom = "label", offset = 1.8) +
+  geom_tiplab(data = filter(.data = oculiferhubbsorum$data, label == "24A"), mapping = aes(label = ID2), fontface = "italic", geom = "label", offset = 1.8, vjust = 0.7) +
+  geom_tiplab(data = filter(.data = oculiferhubbsorum$data, label == "102B"), mapping = aes(label = ID3), fontface = "italic", geom = "label", offset = 1.8, vjust = 0.65) +
+  xlim(c(0,7))
+```
+
+![](DNA-barcoding-paralarval-Octopus-Galapagos_files/figure-gfm/unnamed-chunk-30-6.png)<!-- -->
+
+``` r
+ggsave(filename = "figs/fig3v1.pdf", width = 5.52, height = 2.286667, units = "in")
+ggsave(filename = "figs/fig3v1.png", width = 5.52, height = 2.286667, units = "in", dpi = 320)
+
+
+# plot OTU1 clade
+otu1 <- tree_subset(tree = tre, node = clades$node[3], levels_back = 1, root_edge = T) %>% ggtree(branch.length = "none")
+
+otu1 + geom_nodelab(mapping = aes(label = node))
+```
+
+![](DNA-barcoding-paralarval-Octopus-Galapagos_files/figure-gfm/unnamed-chunk-30-7.png)<!-- -->
+
+``` r
+otu1$data <- mutate(.data = otu1$data, ID = "ID: Operational\nTaxonomic Unit 1\n'OTU1'")
+
+otu1 + 
+  geom_tiplab(data = filter(otu1$data, label == "Octopus briareus"), fontface = "italic", offset = 0.1) + 
+  geom_nodelab(data = filter(otu1$data, support > 0), mapping = aes(label = support), hjust = 0) +
+  geom_highlight(node = 13, fill = cols[3], to.bottom = T, extend = Inf) +
+  geom_segment(aes(x = -Inf, y = 2.3, xend = 0, yend = 2.3)) +
+  geom_strip(taxa1 = "159B", taxa2 = "22A", label = "10 paralarvae", offset = 0.05, offset.text = 0.1, geom = "text") +
+  geom_tiplab(data = filter(.data = otu1$data, label == "26A"), mapping = aes(label = ID), fontface = "italic", geom = "label", offset = 2) +
+  xlim(c(0,8))
+```
+
+![](DNA-barcoding-paralarval-Octopus-Galapagos_files/figure-gfm/unnamed-chunk-30-8.png)<!-- -->
+
+``` r
+ggsave(filename = "figs/fig4v1.pdf", width = 5.52, height = 2.286667, units = "in")
+ggsave(filename = "figs/fig4v1.png", width = 5.52, height = 2.286667, units = "in", dpi = 320)
+
+
+# plot OTU2 clade
+otu2 <- tree_subset(tree = tre, node = clades$node[4], levels_back = 1, root_edge = T) %>% ggtree(branch.length = "none")
+
+otu2 + geom_nodelab(mapping = aes(label = node))
+```
+
+![](DNA-barcoding-paralarval-Octopus-Galapagos_files/figure-gfm/unnamed-chunk-30-9.png)<!-- -->
+
+``` r
+otu2$data <- mutate(.data = otu2$data, ID = "ID: Operational\nTaxonomic Unit 2\n'OTU2'")
+
+otu2 + 
+  geom_tiplab(data = filter(otu2$data, label %in% c("Octopus alecto","Paroctopus digueti")), fontface = "italic", offset = 0.1) + 
+  geom_nodelab(data = filter(otu2$data, support > 0), mapping = aes(label = support), hjust = 0) +
+  geom_highlight(node = 7, fill = cols[4], to.bottom = T, extend = Inf) +
+  geom_segment(aes(x = -Inf, y = 2.5, xend = 0, yend = 2.5)) +
+  geom_strip(taxa1 = "73A", taxa2 = "70A", label = "2 paralarvae", offset = 0.05, offset.text = 0.1, geom = "text") +
+  geom_tiplab(data = filter(.data = otu2$data, label == "73A"), mapping = aes(label = ID), fontface = "italic", geom = "label", offset = 1, vjust = 0.9) +
+  xlim(c(0,4))
+```
+
+![](DNA-barcoding-paralarval-Octopus-Galapagos_files/figure-gfm/unnamed-chunk-30-10.png)<!-- -->
+
+``` r
+ggsave(filename = "figs/fig5v1.pdf", width = 5.52, height = 2.286667, units = "in")
+ggsave(filename = "figs/fig5v1.png", width = 5.52, height = 2.286667, units = "in", dpi = 320)
+```
